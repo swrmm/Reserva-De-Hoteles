@@ -89,56 +89,6 @@ Healthcheck:
 GET http://localhost:3000/api/health
 ```
 
-## Rutas principales
-
-Rutas publicas:
-
-```txt
-POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/forgot-password
-POST /api/auth/reset-password
-GET  /api/health
-```
-
-Rutas protegidas con `Authorization: Bearer <token>`:
-
-```txt
-GET    /api/habitaciones
-POST   /api/habitaciones
-GET    /api/habitaciones/:id
-PUT    /api/habitaciones/:id
-DELETE /api/habitaciones/:id
-
-GET    /api/reservas
-POST   /api/reservas
-GET    /api/reservas/:id
-PUT    /api/reservas/:id
-PATCH  /api/reservas/:id/cancelar
-DELETE /api/reservas/:id
-
-GET    /api/disponibilidad?desde=2026-07-10&hasta=2026-07-12
-GET    /api/dashboard/resumen
-GET    /api/extras
-POST   /api/extras
-```
-
-## Flujo recomendado en Postman
-
-1. Registrar usuario.
-2. Iniciar sesion.
-3. Guardar el token en la variable `token`.
-4. Crear o listar habitaciones.
-5. Buscar disponibilidad.
-6. Crear reserva.
-7. Probar errores: sin token, fechas invalidas y reserva solapada.
-
-La coleccion esta en:
-
-```txt
-postman/reserva_hotel.postman_collection.json
-```
-
 ## Migraciones
 
 - `database/migrations/001_initial_hotel_schema.sql`: crea usuarios, habitaciones, reservas, extras y tokens.
