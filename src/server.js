@@ -1,9 +1,15 @@
-require("dotenv").config();
+require('dotenv').config();
 
-const app = require("./app");
+const app = require('./app');
+const config = require('./config');
+const { sequelize } = require('./models');
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Servidor ejecutandose en http://localhost:${PORT}`);
+app.listen(config.port, async () => {
+  console.log(`Servidor ejecutandose en http://localhost:${config.port}`);
+  try {
+    await sequelize.authenticate();
+    console.log('Conexion a Sequelize establecida correctamente');
+  } catch (error) {
+    console.error('No se pudo conectar a la base de datos:', error.message);
+  }
 });

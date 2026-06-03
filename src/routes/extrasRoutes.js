@@ -1,10 +1,14 @@
 const express = require("express");
 const extrasController = require("../controllers/extrasController");
-const asyncHandler = require("../middlewares/asyncHandler");
+const extrasValidators = require("../validators/extrasValidators");
+const validate = require("../middlewares/validate");
+const { verifyAccessToken } = require("../middlewares/auth");
 
 const router = express.Router();
 
-router.post("/", asyncHandler(extrasController.create));
-router.get("/", asyncHandler(extrasController.list));
+router.use(verifyAccessToken);
+
+router.get("/", extrasController.list);
+router.post("/", extrasValidators.create, validate, extrasController.create);
 
 module.exports = router;

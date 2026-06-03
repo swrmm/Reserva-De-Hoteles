@@ -5,9 +5,16 @@ const reservasRoutes = require("./reservasRoutes");
 const disponibilidadRoutes = require("./disponibilidadRoutes");
 const extrasRoutes = require("./extrasRoutes");
 const dashboardRoutes = require("./dashboardRoutes");
-const authenticate = require("../middlewares/authenticate");
 
 const router = express.Router();
+
+router.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Bienvenido a Reserva de Hoteles API",
+    version: "1.0.0"
+  });
+});
 
 router.get("/health", (req, res) => {
   res.status(200).json({
@@ -17,10 +24,10 @@ router.get("/health", (req, res) => {
 });
 
 router.use("/auth", authRoutes);
-router.use("/habitaciones", authenticate, habitacionesRoutes);
-router.use("/reservas", authenticate, reservasRoutes);
-router.use("/disponibilidad", authenticate, disponibilidadRoutes);
-router.use("/extras", authenticate, extrasRoutes);
-router.use("/dashboard", authenticate, dashboardRoutes);
+router.use("/habitaciones", habitacionesRoutes);
+router.use("/reservas", reservasRoutes);
+router.use("/disponibilidad", disponibilidadRoutes);
+router.use("/extras", extrasRoutes);
+router.use("/dashboard", dashboardRoutes);
 
 module.exports = router;

@@ -1,28 +1,19 @@
-const extrasModel = require("../models/extrasModel");
-const createHttpError = require("../utils/httpError");
-const validateExtra = require("../validators/extrasValidator");
+const db = require('../models');
+const asyncHandler = require('../utils/asyncHandler');
 
-async function create(req, res) {
-  const errors = validateExtra(req.body);
-  if (errors.length) throw createHttpError(400, "Datos invalidos para crear extra", "VALIDATION_ERROR", errors);
+const { Extra } = db;
 
-  const created = await extrasModel.createExtra(req.body);
-  return res.status(201).json({
-    success: true,
-    message: "Extra creado correctamente",
-    data: created
-  });
-}
+const list = asyncHandler(async (req, res) => {
+  const extras = await Extra.findAll({ order: [['nombre', 'ASC']] });
+  res.json({ success: true, data: extras });
+});
 
-async function list(req, res) {
-  const extras = await extrasModel.findAllExtras();
-  return res.status(200).json({
-    success: true,
-    data: extras
-  });
-}
+const create = asyncHandler(async (req, res) => {
+  const extra = await Extra.create(req.body);
+  res.status(201).json({ success: true, data: extra });
+});
 
 module.exports = {
+  list,
   create,
-  list
 };

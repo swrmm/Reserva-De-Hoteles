@@ -1,25 +1,39 @@
-const habitacionesModel = require("../models/habitacionesModel");
-const createHttpError = require("../utils/httpError");
-const { validateDisponibilidad } = require("../validators/reservasValidator");
+const { Op } = require('sequelize');
+const db = require('../models');
+const asyncHandler = require('../utils/asyncHandler');
 
-async function list(req, res) {
-  const errors = validateDisponibilidad(req.query);
-  if (errors.length) throw createHttpError(422, "Parametros de disponibilidad invalidos", "VALIDATION_ERROR", errors);
+const { Habitacion, Reserva } = db;
 
-  const habitaciones = await habitacionesModel.findDisponibles({
-    desde: req.query.desde,
-    hasta: req.query.hasta,
-    capacidad: req.query.capacidad,
-    tipo: req.query.tipo
+const list = asyncHandler(async (req, res) => {
+  const { desde, hasta, capacidad, tipo } = req.query;
+
+  const reservas = await Reserva.findAll({
+    attributes: ['habitacionId'],
+    where: {
+      estado: { [Op.in]: ['pendiente', 'confirmada'] },
+      fecha_entrada: { [Op.lt]: hasta },
+      fecha_salida: { [Op.gt]: desde },
+    },
   });
 
-  return res.status(200).json({
-    success: true,
-    message: habitaciones.length ? "Habitaciones disponibles encontradas" : "No hay habitaciones disponibles",
-    data: habitaciones
+  const ocupadas = reservas.map((reserva) => reserva.habitacionId);
+  const where = {
+    activo: true,
+    estado: 'disponible',
+  };
+
+  if (ocupadas.length) where.id = { [Op.notIn]: ocupadas };
+  if (capacidad) where.capacidad = { [Op.gte]: Number(capacidad) };
+  if (tipo) where.tipo = tipo;
+
+  const habitaciones = await Habitacion.findAll({
+    where,
+    order: [['precio_noche', 'ASC']],
   });
-}
+
+  res.json({ success: true, data: habitaciones });
+});
 
 module.exports = {
-  list
+  list,
 };

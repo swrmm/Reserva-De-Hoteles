@@ -1,9 +1,13 @@
 const express = require("express");
 const disponibilidadController = require("../controllers/disponibilidadController");
-const asyncHandler = require("../middlewares/asyncHandler");
+const reservasValidators = require("../validators/reservasValidators");
+const validate = require("../middlewares/validate");
+const { verifyAccessToken } = require("../middlewares/auth");
 
 const router = express.Router();
 
-router.get("/", asyncHandler(disponibilidadController.list));
+router.use(verifyAccessToken);
+
+router.get("/", reservasValidators.disponibilidad, validate, disponibilidadController.list);
 
 module.exports = router;

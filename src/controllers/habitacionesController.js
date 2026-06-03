@@ -1,75 +1,80 @@
-const habitacionesModel = require("../models/habitacionesModel");
-const parseId = require("../utils/parseId");
-const createHttpError = require("../utils/httpError");
-const { validateHabitacion } = require("../validators/habitacionesValidator");
+const { Op } = require('sequelize');
+const db = require('../models');
+const { AppError } = require('../utils/errors');
+const asyncHandler = require('../utils/asyncHandler');
+const { parsePagination, buildPaginatedResponse } = require('../utils/pagination');
 
-async function create(req, res) {
-  const errors = validateHabitacion(req.body);
-  if (errors.length) throw createHttpError(400, "Datos invalidos para crear habitacion", "VALIDATION_ERROR", errors);
+const { Habitacion, Reserva } = db;
 
-  const created = await habitacionesModel.createHabitacion(req.body);
-  return res.status(201).json({
-    success: true,
-    message: "Habitacion creada correctamente",
-    data: created
+const buildWhere = (query) => {
+  const where = {};
+  if (query.tipo) where.tipo = query.tipo;
+  if (query.estado) where.estado = query.estado;
+  if (query.search) {
+    where[Op.or] = [
+      { numero: { [Op.like]: `%${query.search}%` } },
+      { descripcion: { [Op.like]: `%${query.search}%` } },
+    ];
+  }
+  return where;
+};
+
+const list = asyncHandler(async (req, res) => {
+  const { page, limit, offset } = parsePagination(req.query);
+
+  const { rows, count } = await Habitacion.findAndCountAll({
+    where: buildWhere(req.query),
+    limit,
+    offset,
+    order: [['numero', 'ASC']],
   });
-}
 
-async function list(req, res) {
-  const habitaciones = await habitacionesModel.findAllHabitaciones(req.query);
-  return res.status(200).json({
+  res.json({
     success: true,
-    data: habitaciones
+    ...buildPaginatedResponse(rows, count, { page, limit }),
   });
-}
+});
 
-async function getById(req, res) {
-  const id = parseId(req.params.id);
-  if (!id) throw createHttpError(400, "El id debe ser un entero positivo", "INVALID_ID");
+const getById = asyncHandler(async (req, res) => {
+  const habitacion = await Habitacion.findByPk(req.params.id);
+  if (!habitacion) throw new AppError('Habitacion no encontrada', 404);
 
-  const habitacion = await habitacionesModel.findHabitacionById(id);
-  if (!habitacion) throw createHttpError(404, "Habitacion no encontrada", "ROOM_NOT_FOUND");
+  res.json({ success: true, data: habitacion });
+});
 
-  return res.status(200).json({
-    success: true,
-    data: habitacion
-  });
-}
+const create = asyncHandler(async (req, res) => {
+  const habitacion = await Habitacion.create(req.body);
+  res.status(201).json({ success: true, data: habitacion });
+});
 
-async function update(req, res) {
-  const id = parseId(req.params.id);
-  if (!id) throw createHttpError(400, "El id debe ser un entero positivo", "INVALID_ID");
+const replace = asyncHandler(async (req, res) => {
+  const habitacion = await Habitacion.findByPk(req.params.id);
+  if (!habitacion) throw new AppError('Habitacion no encontrada', 404);
 
-  const errors = validateHabitacion(req.body);
-  if (errors.length) throw createHttpError(400, "Datos invalidos para actualizar habitacion", "VALIDATION_ERROR", errors);
+  await habitacion.update(req.body);
+  res.json({ success: true, data: habitacion });
+});
 
-  const updated = await habitacionesModel.updateHabitacion(id, req.body);
-  if (!updated) throw createHttpError(404, "Habitacion no encontrada", "ROOM_NOT_FOUND");
+const patch = replace;
 
-  return res.status(200).json({
-    success: true,
-    message: "Habitacion actualizada correctamente",
-    data: updated
-  });
-}
+const remove = asyncHandler(async (req, res) => {
+  const habitacion = await Habitacion.findByPk(req.params.id);
+  if (!habitacion) throw new AppError('Habitacion no encontrada', 404);
 
-async function remove(req, res) {
-  const id = parseId(req.params.id);
-  if (!id) throw createHttpError(400, "El id debe ser un entero positivo", "INVALID_ID");
+  const reservas = await Reserva.count({ where: { habitacionId: habitacion.id } });
+  if (reservas > 0) {
+    throw new AppError('No se puede eliminar una habitacion con reservas asociadas', 409);
+  }
 
-  const deleted = await habitacionesModel.deleteHabitacion(id);
-  if (!deleted) throw createHttpError(404, "Habitacion no encontrada", "ROOM_NOT_FOUND");
-
-  return res.status(200).json({
-    success: true,
-    message: "Habitacion eliminada correctamente"
-  });
-}
+  await habitacion.destroy();
+  res.status(204).send();
+});
 
 module.exports = {
-  create,
   list,
   getById,
-  update,
-  remove
+  create,
+  replace,
+  patch,
+  remove,
 };

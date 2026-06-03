@@ -1,43 +1,48 @@
-function errorHandler(error, req, res, next) {
-  console.error(error);
+const {
+  ValidationError,
+  UniqueConstraintError,
+  ForeignKeyConstraintError,
+} = require('sequelize');
 
-  if (error instanceof SyntaxError && "body" in error) {
+function errorHandler(error, req, res, next) {
+  if (res.headersSent) return next(error);
+
+  if (error instanceof SyntaxError && 'body' in error) {
     return res.status(400).json({
       success: false,
-      code: "INVALID_JSON",
-      message: "JSON invalido en el body"
+      message: 'JSON invalido en el body',
     });
   }
 
-  if (error.statusCode) {
-    return res.status(error.statusCode).json({
-      success: false,
-      code: error.code || "REQUEST_ERROR",
-      message: error.message,
-      errors: error.details || []
-    });
+  let statusCode = error.statusCode || 500;
+  let message = error.message || 'Error interno del servidor';
+  let details = error.details || null;
+
+  if (error.name === 'SequelizeValidationError' || error instanceof ValidationError) {
+    statusCode = 400;
+    message = 'Error de validacion en base de datos';
+    details = error.errors?.map((item) => ({ field: item.path, message: item.message }));
   }
 
-  if (error.code === "ER_DUP_ENTRY") {
-    return res.status(409).json({
-      success: false,
-      code: "DUPLICATE_RESOURCE",
-      message: "Ya existe un registro con esos datos"
-    });
+  if (error.name === 'SequelizeUniqueConstraintError' || error instanceof UniqueConstraintError) {
+    statusCode = 409;
+    message = 'Registro duplicado';
+    details = error.errors?.map((item) => ({ field: item.path, message: item.message }));
   }
 
-  if (error.code === "ER_ROW_IS_REFERENCED_2" || error.code === "ER_NO_REFERENCED_ROW_2") {
-    return res.status(409).json({
-      success: false,
-      code: "RELATION_CONFLICT",
-      message: "No se puede completar la accion porque existen datos relacionados"
-    });
+  if (error.name === 'SequelizeForeignKeyConstraintError' || error instanceof ForeignKeyConstraintError) {
+    statusCode = 400;
+    message = 'Referencia invalida';
   }
 
-  return res.status(500).json({
+  if (process.env.NODE_ENV !== 'production' && statusCode === 500) {
+    console.error(error);
+  }
+
+  return res.status(statusCode).json({
     success: false,
-    code: "INTERNAL_ERROR",
-    message: "Error interno del servidor"
+    message,
+    ...(details && { details }),
   });
 }
 

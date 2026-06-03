@@ -1,6 +1,6 @@
 # API REST - Reserva de Hotel
 
-Proyecto backend con Node.js, Express y MySQL para administrar habitaciones, reservas y autenticacion de usuarios.
+Proyecto backend con Node.js, Express, Sequelize, SQLite y JWT para administrar habitaciones, reservas y autenticacion de usuarios.
 
 ## Variables de entorno
 
@@ -8,7 +8,7 @@ Para que el proyecto funcione correctamente, es necesario configurar variables d
 
 ### Local vs produccion
 
-- Entorno local: las variables se configuran en un archivo `.env` en la raiz del proyecto. Este archivo no se sube al repositorio porque contiene credenciales reales. En el repositorio queda `.env.example` como plantilla.
+- Entorno local: las variables se configuran en un archivo `.env` en la raiz del proyecto. Este archivo no se sube al repositorio porque contiene secretos reales. En el repositorio queda `.env.example` como plantilla.
 - Entorno de produccion: si se despliega en Railway, Render u otra plataforma, las variables se configuran desde el panel de Environment Variables del hosting.
 
 ### Tabla de variables del sistema
@@ -16,80 +16,24 @@ Para que el proyecto funcione correctamente, es necesario configurar variables d
 | Variable | Servicio | Descripcion |
 | :--- | :--- | :--- |
 | `PORT` | API Backend | Puerto donde escucha Express, por ejemplo 3000. |
-| `DB_HOST` | Base de datos | Host del servidor MySQL. |
-| `DB_PORT` | Base de datos | Puerto de MySQL, normalmente 3306. |
-| `DB_USER` | Base de datos | Usuario de conexion a MySQL. |
-| `DB_PASSWORD` | Base de datos | Password del usuario MySQL. |
-| `DB_NAME` | Base de datos | Nombre de la base de datos, en este proyecto `eva2_hotel`. |
-| `JWT_SECRET` | API Backend | Clave secreta para firmar y verificar tokens JWT. |
-| `JWT_EXPIRES_IN` | API Backend | Duracion del token, por ejemplo `2h`. |
+| `NODE_ENV` | API Backend | Entorno de ejecucion: development, test o production. |
+| `DB_STORAGE` | Base de datos | Ruta del archivo SQLite usado por Sequelize. |
+| `JWT_ACCESS_SECRET` | API Backend | Clave secreta para firmar access tokens. |
+| `JWT_REFRESH_SECRET` | API Backend | Clave secreta para firmar refresh tokens. |
+| `JWT_ACCESS_EXPIRES_IN` | API Backend | Duracion del access token, por ejemplo `15m`. |
+| `JWT_REFRESH_EXPIRES_IN` | API Backend | Duracion del refresh token, por ejemplo `7d`. |
 | `CORS_ORIGIN` | API Backend | Origen permitido para consumir la API. En local puede usarse `*`. |
 
-### Ejemplo de archivo `.env.example`
+### Ejemplo de `.env.example`
 
 ```env
 PORT=3000
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=tu_password
-DB_NAME=eva2_hotel
-JWT_SECRET=cambia_este_secreto
-JWT_EXPIRES_IN=2h
+NODE_ENV=development
+DB_STORAGE=database.sqlite
+JWT_ACCESS_SECRET=cambia_este_access_secret
+JWT_REFRESH_SECRET=cambia_este_refresh_secret
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
 CORS_ORIGIN=*
 ```
 
-## Instalacion
-
-```bash
-npm install
-```
-
-## Base de datos
-
-1. Crear la base ejecutando:
-
-```sql
-source database/schema.sql;
-```
-
-Tambien puedes abrir `database/schema.sql` en MySQL Workbench y ejecutarlo completo.
-
-2. Copiar `.env.example` como `.env` y ajustar tus credenciales:
-
-```txt
-PORT=3000
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=tu_password
-DB_NAME=eva2_hotel
-JWT_SECRET=cambia_este_secreto
-JWT_EXPIRES_IN=2h
-CORS_ORIGIN=*
-```
-
-## Ejecucion
-
-Modo desarrollo:
-
-```bash
-npm run dev
-```
-
-Modo normal:
-
-```bash
-npm start
-```
-
-Healthcheck:
-
-```txt
-GET http://localhost:3000/api/health
-```
-
-## Migraciones
-
-- `database/migrations/001_initial_hotel_schema.sql`: crea usuarios, habitaciones, reservas, extras y tokens.
-- `database/migrations/002_add_reserva_origen.sql`: agrega el campo `origen` a reservas como evolucion del esquema.

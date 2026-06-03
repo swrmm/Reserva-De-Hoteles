@@ -1,115 +1,72 @@
-const crypto = require("crypto");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const usuariosModel = require("../models/usuariosModel");
-const createHttpError = require("../utils/httpError");
-const {
-  validateRegister,
-  validateLogin,
-  validateForgotPassword,
-  validateResetPassword
-} = require("../validators/authValidator");
+const db = require('../models');
+const { AppError } = require('../utils/errors');
+const authService = require('../services/authService');
+const asyncHandler = require('../utils/asyncHandler');
 
-function createToken(user) {
-  return jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      rol: user.rol
+const { Usuario } = db;
+
+const register = asyncHandler(async (req, res) => {
+  const { email, password, nombre, rol } = req.body;
+
+  const exists = await Usuario.unscoped().findOne({ where: { email } });
+  if (exists) throw new AppError('El email ya esta registrado', 409);
+
+  const passwordHash = await Usuario.hashPassword(password);
+  const usuario = await Usuario.create({ email, passwordHash, nombre, rol });
+
+  res.status(201).json({
+    success: true,
+    data: usuario.toSafeJSON(),
+  });
+});
+
+const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  const usuario = await Usuario.scope('withPassword').findOne({ where: { email } });
+  if (!usuario || !(await usuario.validatePassword(password))) {
+    throw new AppError('Credenciales invalidas', 401);
+  }
+
+  const tokens = await authService.issueTokens(usuario, {
+    userAgent: req.get('user-agent'),
+    ip: req.ip,
+  });
+
+  res.json({
+    success: true,
+    token: tokens.accessToken,
+    data: {
+      usuario: usuario.toSafeJSON(),
+      ...tokens,
     },
-    process.env.JWT_SECRET || "dev-secret",
-    { expiresIn: process.env.JWT_EXPIRES_IN || "2h" }
-  );
-}
-
-async function register(req, res) {
-  const errors = validateRegister(req.body);
-  if (errors.length) throw createHttpError(400, "Datos invalidos para registrar usuario", "VALIDATION_ERROR", errors);
-
-  const existing = await usuariosModel.findUsuarioByEmail(req.body.email);
-  if (existing) throw createHttpError(409, "Ya existe un usuario con ese email", "EMAIL_ALREADY_EXISTS");
-
-  const passwordHash = await bcrypt.hash(req.body.password, 10);
-  const user = await usuariosModel.createUsuario({
-    nombre: req.body.nombre,
-    email: req.body.email,
-    password_hash: passwordHash,
-    rol: req.body.rol
   });
+});
 
-  return res.status(201).json({
-    success: true,
-    message: "Usuario registrado correctamente",
-    data: user
-  });
-}
+const refresh = asyncHandler(async (req, res) => {
+  const tokens = await authService.refreshTokens(req.body.refreshToken);
+  res.json({ success: true, data: tokens });
+});
 
-async function login(req, res) {
-  const errors = validateLogin(req.body);
-  if (errors.length) throw createHttpError(400, "Datos invalidos para iniciar sesion", "VALIDATION_ERROR", errors);
+const logout = asyncHandler(async (req, res) => {
+  await authService.revokeSession(req.body.refreshToken);
+  res.status(204).send();
+});
 
-  const userRow = await usuariosModel.findUsuarioByEmail(req.body.email);
-  const validPassword = userRow
-    ? await bcrypt.compare(req.body.password, userRow.password_hash)
-    : false;
+const me = asyncHandler(async (req, res) => {
+  res.json({ success: true, data: req.usuario.toSafeJSON() });
+});
 
-  if (!userRow || !validPassword || !userRow.activo) {
-    throw createHttpError(401, "Email o password incorrectos", "INVALID_CREDENTIALS");
-  }
-
-  const user = {
-    id: userRow.id,
-    nombre: userRow.nombre,
-    email: userRow.email,
-    rol: userRow.rol
-  };
-
-  return res.status(200).json({
-    success: true,
-    message: "Login correcto",
-    token: createToken(user),
-    data: user
-  });
-}
-
-async function forgotPassword(req, res) {
-  const errors = validateForgotPassword(req.body);
-  if (errors.length) throw createHttpError(400, "Email invalido", "VALIDATION_ERROR", errors);
-
-  const user = await usuariosModel.findUsuarioByEmail(req.body.email);
-  const token = crypto.randomBytes(24).toString("hex");
-
-  if (user) {
-    await usuariosModel.createPasswordResetToken(user.id, token);
-  }
-
-  return res.status(200).json({
-    success: true,
-    message: "Si el email existe, se genero un token de recuperacion",
-    token_demo: user ? token : null
-  });
-}
-
-async function resetPassword(req, res) {
-  const errors = validateResetPassword(req.body);
-  if (errors.length) throw createHttpError(400, "Datos invalidos para restablecer password", "VALIDATION_ERROR", errors);
-
-  const resetToken = await usuariosModel.findValidResetToken(req.body.token);
-  if (!resetToken) throw createHttpError(400, "Token invalido o expirado", "INVALID_RESET_TOKEN");
-
-  const passwordHash = await bcrypt.hash(req.body.password, 10);
-  await usuariosModel.updatePassword(resetToken.usuario_id, passwordHash);
-  await usuariosModel.markResetTokenUsed(resetToken.id);
-
-  return res.status(200).json({
-    success: true,
-    message: "Password actualizado correctamente"
-  });
-}
+const listSesiones = asyncHandler(async (req, res) => {
+  const sesiones = await authService.listActiveSessions(req.usuario.id);
+  res.json({ success: true, data: sesiones });
+});
 
 module.exports = {
   register,
   login,
-  forgotPassword,
-  resetPassword
+  refresh,
+  logout,
+  me,
+  listSesiones,
 };
