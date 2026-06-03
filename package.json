@@ -1,7 +1,7 @@
 {
-  "name": "eva-2-api-rest",
+  "name": "reserva-de-hoteles-api",
   "version": "1.0.0",
-  "description": "API REST con Express + SQL",
+  "description": "API REST para reserva de hoteles con Express y MySQL",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
