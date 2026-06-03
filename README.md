@@ -2,37 +2,6 @@
 
 Proyecto backend con Node.js, Express y MySQL para administrar habitaciones, reservas y autenticacion de usuarios.
 
-## Requerimientos trabajados
-
-- GEN-01: Repositorio y README ejecutable.
-- GEN-02: Variables de entorno y `.env.example`.
-- GEN-03: Conexion a base de datos y migraciones SQL.
-- GEN-04: Registro de usuario.
-- GEN-05: Login con JWT.
-- GEN-06: Middleware de autenticacion para rutas protegidas.
-- GEN-07: Restablecimiento de password con token demo.
-- GEN-08: Errores centralizados y JSON uniforme.
-- GEN-09 y GEN-10: CRUD REST con validaciones.
-- GEN-11: Coleccion Postman.
-- GEN-12: Migracion adicional documentada.
-- GEN-13: Preparado para deploy con variables de entorno.
-- RQ-01: Modelo Habitacion.
-- RQ-02: Modelo Reserva.
-- RQ-03: CRUD Habitaciones.
-- RQ-04 a RQ-10: Reservas, disponibilidad, dashboard y precios basicos.
-
-## Tecnologias
-
-- Node.js
-- Express
-- MySQL
-- mysql2
-- dotenv
-- cors
-- bcryptjs
-- jsonwebtoken
-- Postman
-
 ## Variables de entorno
 
 Para que el proyecto funcione correctamente, es necesario configurar variables de entorno en local y tambien en produccion si se despliega.
