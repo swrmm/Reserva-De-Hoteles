@@ -1,0 +1,392 @@
+{
+  "info": {
+    "name": "Reserva Hotel API REST",
+    "description": "Coleccion para probar autenticacion, habitaciones, reservas, disponibilidad, dashboard y errores.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "habitacionId",
+      "value": "1"
+    },
+    {
+      "key": "reservaId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Sistema",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        },
+        {
+          "name": "Error 404 ruta inexistente",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ruta-inexistente"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Fabian Mora\",\n  \"email\": \"fabian@example.com\",\n  \"password\": \"123456\",\n  \"rol\": \"admin\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login y guardar token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) pm.collectionVariables.set('token', json.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"fabian@example.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Solicitar reset password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"fabian@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/forgot-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Habitaciones",
+      "item": [
+        {
+          "name": "Listar habitaciones",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/habitaciones"
+          }
+        },
+        {
+          "name": "Crear habitacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.id) pm.collectionVariables.set('habitacionId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"401\",\n  \"tipo\": \"doble\",\n  \"capacidad\": 2,\n  \"precio_noche\": 75000,\n  \"estado\": \"disponible\",\n  \"descripcion\": \"Habitacion doble con balcon\",\n  \"activo\": true\n}"
+            },
+            "url": "{{baseUrl}}/habitaciones"
+          }
+        },
+        {
+          "name": "Detalle habitacion",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/habitaciones/{{habitacionId}}"
+          }
+        },
+        {
+          "name": "Actualizar habitacion",
+          "request": {
+            "method": "PUT",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numero\": \"401\",\n  \"tipo\": \"doble\",\n  \"capacidad\": 2,\n  \"precio_noche\": 79000,\n  \"estado\": \"disponible\",\n  \"descripcion\": \"Habitacion doble actualizada\",\n  \"activo\": true\n}"
+            },
+            "url": "{{baseUrl}}/habitaciones/{{habitacionId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservas",
+      "item": [
+        {
+          "name": "Buscar disponibilidad",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/disponibilidad?desde=2026-07-10&hasta=2026-07-12&capacidad=2"
+          }
+        },
+        {
+          "name": "Crear reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.id) pm.collectionVariables.set('reservaId', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habitacion_id\": {{habitacionId}},\n  \"nombre_huesped\": \"Camila Rojas\",\n  \"email_huesped\": \"camila@example.com\",\n  \"fecha_entrada\": \"2026-07-10\",\n  \"fecha_salida\": \"2026-07-12\",\n  \"estado\": \"confirmada\",\n  \"extras_total\": 8500,\n  \"observaciones\": \"Llegada despues de las 20:00\",\n  \"origen\": \"postman\"\n}"
+            },
+            "url": "{{baseUrl}}/reservas"
+          }
+        },
+        {
+          "name": "Listar reservas",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/reservas"
+          }
+        },
+        {
+          "name": "Cancelar reserva",
+          "request": {
+            "method": "PATCH",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/reservas/{{reservaId}}/cancelar"
+          }
+        },
+        {
+          "name": "Error 422 fechas invalidas",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"habitacion_id\": {{habitacionId}},\n  \"nombre_huesped\": \"Error Fechas\",\n  \"email_huesped\": \"error@example.com\",\n  \"fecha_entrada\": \"2026-07-12\",\n  \"fecha_salida\": \"2026-07-10\",\n  \"estado\": \"pendiente\",\n  \"extras_total\": 0\n}"
+            },
+            "url": "{{baseUrl}}/reservas"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard y extras",
+      "item": [
+        {
+          "name": "Resumen dashboard",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/dashboard/resumen"
+          }
+        },
+        {
+          "name": "Listar extras",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/extras"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Errores",
+      "item": [
+        {
+          "name": "Error 401 sin token",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/habitaciones"
+          }
+        }
+      ]
+    }
+  ]
+}

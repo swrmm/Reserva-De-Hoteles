@@ -1,0 +1,61 @@
+Registro
+POST http://localhost:3000/api/auth/register
+
+{
+  "nombre": "Fabian Mora",
+  "email": "fabian@example.com",
+  "password": "123456",
+  "rol": "admin"
+}
+
+Login
+POST http://localhost:3000/api/auth/login
+
+{
+  "email": "fabian@example.com",
+  "password": "123456"
+}
+
+Habitaciones
+POST http://localhost:3000/api/habitaciones
+Authorization: Bearer TOKEN
+
+{
+  "numero": "401",
+  "tipo": "doble",
+  "capacidad": 2,
+  "precio_noche": 75000,
+  "estado": "disponible",
+  "descripcion": "Habitacion doble con balcon",
+  "activo": true
+}
+
+Reservas
+POST http://localhost:3000/api/reservas
+Authorization: Bearer TOKEN
+
+{
+  "habitacion_id": 1,
+  "nombre_huesped": "Camila Rojas",
+  "email_huesped": "camila@example.com",
+  "fecha_entrada": "2026-07-10",
+  "fecha_salida": "2026-07-12",
+  "estado": "confirmada",
+  "extras_total": 8500,
+  "observaciones": "Llegada despues de las 20:00",
+  "origen": "postman"
+}
+
+Extras
+POST http://localhost:3000/api/extras
+Authorization: Bearer TOKEN
+
+{
+  "nombre": "Spa",
+  "precio": 25000,
+  "activo": true
+}
+
+Disponibilidad
+GET http://localhost:3000/api/disponibilidad?desde=2026-07-10&hasta=2026-07-12&capacidad=2
+Authorization: Bearer TOKEN

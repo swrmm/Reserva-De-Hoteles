@@ -1,0 +1,718 @@
+GUIA DE EVALUACION - API REST RESERVA DE HOTEL
+================================================
+
+Proyecto:
+API REST para reserva de hotel usando Node.js, Express y MySQL.
+
+Carpeta del proyecto:
+C:\Users\Fabiant\Desktop\Proyecto Web 2
+
+Objetivo:
+Construir una API REST basica pero completa para administrar usuarios, habitaciones,
+reservas, disponibilidad, extras y un resumen tipo dashboard.
+
+
+1. TECNOLOGIAS USADAS
+---------------------
+
+Backend:
+- Node.js
+- Express
+
+Base de datos:
+- MySQL
+- mysql2
+
+Autenticacion:
+- bcryptjs para encriptar passwords
+- jsonwebtoken para generar JWT
+
+Configuracion:
+- dotenv
+- cors
+
+Pruebas:
+- Postman
+
+
+2. ESTRUCTURA DEL PROYECTO
+--------------------------
+
+Archivos principales:
+
+- package.json
+  Contiene scripts y dependencias del proyecto.
+
+- README.md
+  Explica instalacion, configuracion, rutas y uso general.
+
+- .env.example
+  Ejemplo de variables de entorno sin secretos reales.
+
+- database/schema.sql
+  Script completo para crear la base de datos y tablas.
+
+- database/migrations/
+  Contiene migraciones SQL separadas para evidenciar evolucion del esquema.
+
+- postman/reserva_hotel.postman_collection.json
+  Coleccion Postman para probar los endpoints.
+
+- planificacion.md
+  Plan por hitos: hito 0, hito 1, hito 2 y hito 3.
+
+- Estructura POST y PUT.txt
+  Ejemplos de JSON para copiar y pegar en Postman.
+
+- src/app.js
+  Configuracion principal de Express.
+
+- src/server.js
+  Levanta el servidor.
+
+- src/routes/
+  Define las rutas de la API.
+
+- src/controllers/
+  Contiene la logica de cada endpoint.
+
+- src/models/
+  Contiene las consultas SQL a MySQL.
+
+- src/validators/
+  Validaciones basicas de entrada.
+
+- src/middlewares/
+  Middlewares de autenticacion, errores y rutas no encontradas.
+
+
+3. REQUERIMIENTOS GENERALES CUMPLIDOS
+-------------------------------------
+
+GEN-01: Repositorio y README ejecutable
+Cumplimiento:
+- Existe README.md con descripcion, tecnologias, instalacion, variables y rutas.
+- El proyecto tiene estructura clara por carpetas.
+- Existe .gitignore para excluir node_modules y .env.
+
+Donde verlo:
+- README.md
+- .gitignore
+- package.json
+
+Como verificar:
+1. Abrir README.md.
+2. Revisar que indica como instalar con npm install.
+3. Revisar que indica como ejecutar con npm run dev o npm start.
+
+
+GEN-02: Variables de entorno y .env.example
+Cumplimiento:
+- Existe archivo .env.example.
+- No se sube el archivo .env como parte del proyecto.
+- Las credenciales de base de datos se leen desde variables de entorno.
+
+Donde verlo:
+- .env.example
+- src/config/db.js
+- src/server.js
+
+Variables usadas:
+- PORT
+- DB_HOST
+- DB_PORT
+- DB_USER
+- DB_PASSWORD
+- DB_NAME
+- JWT_SECRET
+- JWT_EXPIRES_IN
+- CORS_ORIGIN
+
+Como verificar:
+1. Copiar .env.example y renombrarlo a .env.
+2. Ajustar usuario, password y nombre de base de datos.
+3. Ejecutar npm start.
+
+
+GEN-03: Conexion BD y migraciones
+Cumplimiento:
+- El proyecto tiene conexion a MySQL.
+- Existe script schema.sql para crear toda la base.
+- Existe carpeta migrations con migracion inicial y migracion adicional.
+
+Donde verlo:
+- database/schema.sql
+- database/migrations/001_initial_hotel_schema.sql
+- database/migrations/002_add_reserva_origen.sql
+- src/config/db.js
+
+Como verificar:
+1. Abrir MySQL Workbench.
+2. Ejecutar database/schema.sql completo.
+3. Confirmar que se crea la base eva2_hotel.
+4. Confirmar que existen tablas:
+   - usuarios
+   - password_reset_tokens
+   - habitaciones
+   - reservas
+   - extras
+
+
+GEN-04: Registro de usuario
+Cumplimiento:
+- Existe endpoint para registrar usuarios.
+- El password se guarda encriptado con bcryptjs.
+- Se valida nombre, email y password.
+
+Endpoint:
+POST /api/auth/register
+
+Donde verlo:
+- src/routes/authRoutes.js
+- src/controllers/authController.js
+- src/models/usuariosModel.js
+- src/validators/authValidator.js
+
+Como verificar en Postman:
+POST http://localhost:3000/api/auth/register
+
+Body:
+{
+  "nombre": "Fabian Mora",
+  "email": "fabian@example.com",
+  "password": "123456",
+  "rol": "admin"
+}
+
+Respuesta esperada:
+- Status 201
+- Mensaje: Usuario registrado correctamente
+
+
+GEN-05: Login y JWT
+Cumplimiento:
+- Existe endpoint de login.
+- Si las credenciales son correctas, devuelve un token JWT.
+- Si son incorrectas, responde 401.
+
+Endpoint:
+POST /api/auth/login
+
+Donde verlo:
+- src/controllers/authController.js
+- src/middlewares/authenticate.js
+
+Como verificar en Postman:
+POST http://localhost:3000/api/auth/login
+
+Body:
+{
+  "email": "fabian@example.com",
+  "password": "123456"
+}
+
+Respuesta esperada:
+- Status 200
+- Campo token con JWT
+
+Ese token se debe usar en rutas protegidas:
+Authorization: Bearer TOKEN
+
+
+GEN-06: Middleware de autenticacion
+Cumplimiento:
+- Las rutas del dominio estan protegidas con JWT.
+- Si no se envia token, responde 401.
+
+Rutas protegidas:
+- /api/habitaciones
+- /api/reservas
+- /api/disponibilidad
+- /api/extras
+- /api/dashboard
+
+Rutas publicas:
+- /api/auth/register
+- /api/auth/login
+- /api/auth/forgot-password
+- /api/auth/reset-password
+- /api/health
+
+Donde verlo:
+- src/routes/index.js
+- src/middlewares/authenticate.js
+
+Como verificar:
+1. Hacer GET a /api/habitaciones sin token.
+2. Debe responder 401 con mensaje de autenticacion requerida.
+
+
+GEN-07: Restablecer password
+Cumplimiento:
+- Existe flujo basico para solicitar token de recuperacion.
+- Existe endpoint para cambiar password usando token.
+- En modo demo, la API devuelve token_demo para probar en Postman.
+
+Endpoints:
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
+
+Donde verlo:
+- src/controllers/authController.js
+- src/models/usuariosModel.js
+- database/schema.sql tabla password_reset_tokens
+
+Como verificar:
+1. Ejecutar forgot-password con email existente.
+2. Copiar token_demo.
+3. Ejecutar reset-password con ese token y nuevo password.
+
+
+GEN-08: Errores centralizados y JSON uniforme
+Cumplimiento:
+- Existe middleware centralizado para errores.
+- Los errores usan JSON con success false, code y message.
+- Se manejan errores 400, 401, 404, 409, 422 y 500.
+
+Donde verlo:
+- src/middlewares/errorHandler.js
+- src/middlewares/notFound.js
+- src/utils/httpError.js
+
+Como verificar:
+1. Probar una ruta inexistente:
+   GET /api/ruta-inexistente
+2. Probar una habitacion duplicada.
+3. Probar una reserva con fechas invalidas.
+
+
+GEN-09: CRUD REST y pantallas/gestion por API
+Cumplimiento:
+- Existe CRUD REST de habitaciones.
+- Existe CRUD REST de reservas.
+- Se puede probar todo desde Postman.
+
+Habitaciones:
+- GET /api/habitaciones
+- POST /api/habitaciones
+- GET /api/habitaciones/:id
+- PUT /api/habitaciones/:id
+- DELETE /api/habitaciones/:id
+
+Reservas:
+- GET /api/reservas
+- POST /api/reservas
+- GET /api/reservas/:id
+- PUT /api/reservas/:id
+- PATCH /api/reservas/:id/cancelar
+- DELETE /api/reservas/:id
+
+Donde verlo:
+- src/routes/habitacionesRoutes.js
+- src/controllers/habitacionesController.js
+- src/models/habitacionesModel.js
+- src/routes/reservasRoutes.js
+- src/controllers/reservasController.js
+- src/models/reservasModel.js
+
+
+GEN-10: Validaciones de entrada y reglas HTTP
+Cumplimiento:
+- Se validan campos obligatorios.
+- Se validan tipos de habitacion y estados permitidos.
+- Se validan fechas de reserva.
+- Se usa 409 para conflictos como reserva solapada.
+- Se usa 422 para reglas de negocio de reservas.
+
+Donde verlo:
+- src/validators/habitacionesValidator.js
+- src/validators/reservasValidator.js
+- src/controllers/reservasController.js
+
+Como verificar:
+1. Crear una habitacion sin numero.
+2. Crear una reserva con fecha_salida anterior a fecha_entrada.
+3. Crear dos reservas en la misma habitacion y mismo rango de fechas.
+
+
+GEN-11: Coleccion Postman
+Cumplimiento:
+- Existe coleccion Postman exportada.
+- Tiene variables baseUrl, token, habitacionId y reservaId.
+- Incluye auth, CRUD, disponibilidad, dashboard y errores.
+
+Donde verlo:
+- postman/reserva_hotel.postman_collection.json
+
+Como verificar:
+1. Abrir Postman.
+2. Importar postman/reserva_hotel.postman_collection.json.
+3. Ejecutar Health.
+4. Ejecutar Register.
+5. Ejecutar Login y guardar token.
+6. Probar habitaciones y reservas.
+
+
+GEN-12: Evolucion de esquema
+Cumplimiento:
+- Existe una migracion adicional documentada.
+- La migracion agrega el campo origen a reservas.
+
+Donde verlo:
+- database/migrations/002_add_reserva_origen.sql
+- README.md seccion Migraciones
+
+Como verificar:
+1. Abrir 002_add_reserva_origen.sql.
+2. Confirmar que contiene ALTER TABLE reservas ADD COLUMN origen.
+3. Confirmar que database/schema.sql ya incluye el campo origen.
+
+
+GEN-13: Preparacion para despliegue
+Cumplimiento:
+- El proyecto usa variables de entorno.
+- CORS se configura con CORS_ORIGIN.
+- El servidor usa process.env.PORT.
+- README indica como configurar.
+
+Donde verlo:
+- src/server.js
+- src/app.js
+- .env.example
+- README.md
+
+Como verificar:
+1. Cambiar PORT en .env.
+2. Ejecutar npm start.
+3. Confirmar que el servidor usa el puerto configurado.
+
+
+4. REQUERIMIENTOS ESPECIFICOS DEL HOTEL CUMPLIDOS
+-------------------------------------------------
+
+RQ-01: Modelar entidad principal Habitacion
+Cumplimiento:
+- Existe tabla habitaciones.
+- Tiene numero, tipo, capacidad, precio_noche, estado, descripcion y activo.
+- numero es unico.
+- capacidad y precio_noche deben ser positivos.
+
+Donde verlo:
+- database/schema.sql
+- src/models/habitacionesModel.js
+- src/validators/habitacionesValidator.js
+
+Como verificar:
+1. Ejecutar schema.sql.
+2. Revisar tabla habitaciones en MySQL.
+3. Crear habitacion desde Postman.
+
+
+RQ-02: Modelar entidad secundaria Reserva
+Cumplimiento:
+- Existe tabla reservas.
+- Reserva se relaciona con habitacion_id.
+- Reserva puede relacionarse con usuario_id.
+- Incluye nombre_huesped, email_huesped, fechas, estado, total y observaciones.
+
+Donde verlo:
+- database/schema.sql
+- src/models/reservasModel.js
+- src/validators/reservasValidator.js
+
+Como verificar:
+1. Revisar tabla reservas en MySQL.
+2. Crear reserva desde Postman.
+3. Confirmar que aparece en GET /api/reservas.
+
+
+RQ-03: CRUD del recurso principal Habitaciones
+Cumplimiento:
+- Se implemento CRUD completo de habitaciones.
+- Incluye crear, listar, ver detalle, actualizar y eliminar.
+
+Endpoints:
+- GET /api/habitaciones
+- POST /api/habitaciones
+- GET /api/habitaciones/:id
+- PUT /api/habitaciones/:id
+- DELETE /api/habitaciones/:id
+
+Donde verlo:
+- src/routes/habitacionesRoutes.js
+- src/controllers/habitacionesController.js
+- src/models/habitacionesModel.js
+
+Como verificar:
+1. Login para obtener token.
+2. Crear habitacion.
+3. Listar habitaciones.
+4. Obtener habitacion por id.
+5. Actualizar habitacion.
+6. Eliminar habitacion.
+
+
+RQ-04: CRUD del recurso secundario Reservas
+Cumplimiento:
+- Se implemento CRUD de reservas.
+- Incluye cancelar reserva con PATCH.
+
+Endpoints:
+- GET /api/reservas
+- POST /api/reservas
+- GET /api/reservas/:id
+- PUT /api/reservas/:id
+- PATCH /api/reservas/:id/cancelar
+- DELETE /api/reservas/:id
+
+Donde verlo:
+- src/routes/reservasRoutes.js
+- src/controllers/reservasController.js
+- src/models/reservasModel.js
+
+
+RQ-05: Fecha de salida posterior a fecha de entrada
+Cumplimiento:
+- La API valida que fecha_salida sea posterior a fecha_entrada.
+- Si no se cumple, responde 422.
+
+Donde verlo:
+- src/validators/reservasValidator.js
+- src/utils/dateUtils.js
+
+Como verificar:
+POST /api/reservas
+
+Body invalido:
+{
+  "habitacion_id": 1,
+  "nombre_huesped": "Error Fechas",
+  "email_huesped": "error@example.com",
+  "fecha_entrada": "2026-07-12",
+  "fecha_salida": "2026-07-10",
+  "estado": "pendiente",
+  "extras_total": 0
+}
+
+Respuesta esperada:
+- Status 422
+- Mensaje indicando que fecha_salida debe ser posterior.
+
+
+RQ-06: No solapar reservas activas
+Cumplimiento:
+- Antes de crear o editar una reserva, la API revisa si ya existe una reserva
+  pendiente o confirmada en la misma habitacion y fechas cruzadas.
+- Si existe solapamiento, responde 409.
+
+Donde verlo:
+- src/models/reservasModel.js funcion hasSolapamiento
+- src/controllers/reservasController.js
+
+Como verificar:
+1. Crear reserva para habitacion 1 del 2026-07-10 al 2026-07-12.
+2. Intentar crear otra reserva para habitacion 1 del 2026-07-11 al 2026-07-13.
+3. Debe responder 409.
+
+
+RQ-07: Consulta de disponibilidad
+Cumplimiento:
+- Existe endpoint para buscar habitaciones disponibles por rango de fechas.
+- Excluye habitaciones con reservas activas solapadas.
+
+Endpoint:
+GET /api/disponibilidad?desde=2026-07-10&hasta=2026-07-12&capacidad=2
+
+Donde verlo:
+- src/routes/disponibilidadRoutes.js
+- src/controllers/disponibilidadController.js
+- src/models/habitacionesModel.js
+
+
+RQ-08: Panel principal / dashboard
+Cumplimiento:
+- Existe endpoint resumen con KPIs del hotel.
+- Muestra totales de habitaciones y reservas.
+- Muestra proximas reservas.
+
+Endpoint:
+GET /api/dashboard/resumen
+
+Donde verlo:
+- src/routes/dashboardRoutes.js
+- src/controllers/dashboardController.js
+- src/models/dashboardModel.js
+
+
+RQ-09: Flujo transaccional crear reserva validada
+Cumplimiento:
+- Para crear reserva, primero se valida habitacion, fechas, disponibilidad y total.
+- El total se calcula en backend.
+- No se confia en un total enviado por el cliente.
+
+Donde verlo:
+- src/controllers/reservasController.js
+- src/models/reservasModel.js
+- src/utils/dateUtils.js
+
+Como verificar:
+1. Buscar disponibilidad.
+2. Crear reserva usando habitacion disponible.
+3. Revisar que el total se calcula segun noches * precio_noche + extras_total.
+
+
+RQ-10: Precios y extras
+Cumplimiento:
+- Habitacion tiene precio_noche.
+- Reserva tiene extras_total.
+- El total se calcula automaticamente.
+- Existe tabla extras y endpoint basico para listar/crear extras.
+
+Endpoints:
+- GET /api/extras
+- POST /api/extras
+
+Donde verlo:
+- database/schema.sql
+- src/models/extrasModel.js
+- src/controllers/extrasController.js
+- src/controllers/reservasController.js
+
+
+5. PASOS COMPLETOS PARA VERIFICAR EN EVALUACION
+-----------------------------------------------
+
+Paso 1: Instalar dependencias
+Abrir terminal en:
+C:\Users\Fabiant\Desktop\Proyecto Web 2
+
+Ejecutar:
+npm install
+
+
+Paso 2: Configurar .env
+Crear archivo .env copiando .env.example.
+
+Ejemplo:
+PORT=3000
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=tu_password
+DB_NAME=eva2_hotel
+JWT_SECRET=cambia_este_secreto
+JWT_EXPIRES_IN=2h
+CORS_ORIGIN=*
+
+
+Paso 3: Crear base de datos
+Abrir MySQL Workbench y ejecutar:
+database/schema.sql
+
+
+Paso 4: Levantar servidor
+Ejecutar:
+npm run dev
+
+O:
+npm start
+
+
+Paso 5: Probar health
+GET http://localhost:3000/api/health
+
+Respuesta esperada:
+{
+  "success": true,
+  "message": "API funcionando correctamente"
+}
+
+
+Paso 6: Importar Postman
+Importar archivo:
+postman/reserva_hotel.postman_collection.json
+
+
+Paso 7: Flujo Postman recomendado
+1. Auth / Registrar usuario
+2. Auth / Login y guardar token
+3. Habitaciones / Listar habitaciones
+4. Habitaciones / Crear habitacion
+5. Reservas / Buscar disponibilidad
+6. Reservas / Crear reserva
+7. Reservas / Listar reservas
+8. Dashboard y extras / Resumen dashboard
+9. Errores / Error 401 sin token
+10. Reservas / Error 422 fechas invalidas
+
+
+6. RESPUESTAS DE ERROR IMPORTANTES
+----------------------------------
+
+Sin token:
+GET /api/habitaciones
+Respuesta esperada:
+Status 401
+{
+  "success": false,
+  "code": "AUTH_REQUIRED",
+  "message": "Debes iniciar sesion para usar este recurso"
+}
+
+Fechas invalidas:
+POST /api/reservas
+Respuesta esperada:
+Status 422
+code: VALIDATION_ERROR
+
+Reserva solapada:
+POST /api/reservas
+Respuesta esperada:
+Status 409
+code: BOOKING_OVERLAP
+
+Habitacion duplicada:
+POST /api/habitaciones
+Respuesta esperada:
+Status 409
+code: DUPLICATE_RESOURCE
+
+Ruta inexistente:
+GET /api/ruta-inexistente
+Respuesta esperada:
+Status 404
+code: ROUTE_NOT_FOUND
+
+
+7. COMENTARIO PARA DEFENSA
+--------------------------
+
+Este proyecto esta hecho como una API REST basica y evaluable.
+No es una aplicacion frontend, sino un backend probado por Postman.
+
+La idea principal es demostrar:
+- estructura clara de API REST,
+- conexion a base de datos,
+- autenticacion con JWT,
+- modelos de hotel,
+- CRUD de habitaciones y reservas,
+- validaciones basicas,
+- errores claros,
+- coleccion Postman,
+- planificacion por hitos,
+- migracion adicional de esquema.
+
+Si preguntan por que se usa MySQL y no PostgreSQL/Sequelize:
+Se uso MySQL con mysql2 porque el proyecto base ya estaba construido asi y permite
+cumplir los requerimientos de forma simple, directa y facil de probar.
+
+Si preguntan por el reset de password:
+Es un flujo demo para evaluacion. En un sistema real el token se enviaria por email,
+pero aqui se devuelve como token_demo para poder verificarlo en Postman.
+
+Si preguntan por las rutas protegidas:
+Primero se hace login, luego se copia el token JWT y se envia en Authorization Bearer.
+
+Si preguntan por el calculo de total:
+El backend calcula total = noches * precio_noche + extras_total, para evitar que el
+cliente manipule el precio final.
