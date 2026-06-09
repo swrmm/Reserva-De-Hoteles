@@ -1,30 +1,17 @@
 # API REST - Reserva de Hotel
 
-Proyecto backend con Node.js, Express, Sequelize, SQLite y JWT para administrar habitaciones, reservas y autenticacion de usuarios.
+Proyecto con backend Node.js + Express + Sequelize + SQLite + JWT y cliente React + Vite para el hito 2.
+
+## Estructura
+
+```txt
+src/        Backend API REST
+client/     Frontend React + Vite
+```
 
 ## Variables de entorno
 
-Para que el proyecto funcione correctamente, es necesario configurar variables de entorno en local y tambien en produccion si se despliega.
-
-### Local vs produccion
-
-- Entorno local: las variables se configuran en un archivo `.env` en la raiz del proyecto. Este archivo no se sube al repositorio porque contiene secretos reales. En el repositorio queda `.env.example` como plantilla.
-- Entorno de produccion: si se despliega en Railway, Render u otra plataforma, las variables se configuran desde el panel de Environment Variables del hosting.
-
-### Tabla de variables del sistema
-
-| Variable | Servicio | Descripcion |
-| :--- | :--- | :--- |
-| `PORT` | API Backend | Puerto donde escucha Express, por ejemplo 3000. |
-| `NODE_ENV` | API Backend | Entorno de ejecucion: development, test o production. |
-| `DB_STORAGE` | Base de datos | Ruta del archivo SQLite usado por Sequelize. |
-| `JWT_ACCESS_SECRET` | API Backend | Clave secreta para firmar access tokens. |
-| `JWT_REFRESH_SECRET` | API Backend | Clave secreta para firmar refresh tokens. |
-| `JWT_ACCESS_EXPIRES_IN` | API Backend | Duracion del access token, por ejemplo `15m`. |
-| `JWT_REFRESH_EXPIRES_IN` | API Backend | Duracion del refresh token, por ejemplo `7d`. |
-| `CORS_ORIGIN` | API Backend | Origen permitido para consumir la API. En local puede usarse `*`. |
-
-### Ejemplo de `.env.example`
+Backend `.env`:
 
 ```env
 PORT=3000
@@ -37,3 +24,67 @@ JWT_REFRESH_EXPIRES_IN=7d
 CORS_ORIGIN=*
 ```
 
+Frontend `client/.env`:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+```
+
+## Instalacion
+
+```bash
+npm install
+npm install --prefix client
+```
+
+## Base de datos
+
+```bash
+npm run db:migrate
+npm run db:seed
+```
+
+Para reiniciar todo:
+
+```bash
+npm run db:reset
+```
+
+Usuario demo:
+
+```txt
+email: fabian@example.com
+password: 123456
+```
+
+## Ejecucion
+
+Backend:
+
+```bash
+npm run dev
+```
+
+Frontend:
+
+```bash
+npm run client:dev
+```
+
+## Hito 2
+
+Evidencia principal:
+
+```txt
+MATRIZ_REQUISITOS.md
+```
+
+Avances:
+
+- GEN-04: Registro de usuario.
+- GEN-05: Login con access token y refresh token.
+- GEN-06: Middleware de autenticacion.
+- RQ-03: CRUD de habitaciones.
+- RQ-08: Pantalla visual de habitaciones y ocupacion.
+
+El cliente usa `sessionStorage` para tokens, no `localStorage`, por lo que la sesion no queda guardada de forma permanente ni se conserva al cerrar una ventana privada/incognito.
