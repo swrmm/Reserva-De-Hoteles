@@ -1,17 +1,31 @@
-# API REST - Reserva de Hotel
+# Reserva de Hoteles
 
-Proyecto con backend Node.js + Express + Sequelize + SQLite + JWT y cliente React + Vite para el hito 2.
+Proyecto web para administrar habitaciones y reservas de hotel. Incluye un backend con Node.js, Express, Sequelize, SQLite y JWT, mas un frontend con React + Vite para el avance del Hito 2.
 
-## Estructura
+## Variables de Entorno
 
-```txt
-src/        Backend API REST
-client/     Frontend React + Vite
-```
+Para que el proyecto funcione correctamente, es necesario configurar variables de entorno tanto en el entorno local de desarrollo como en produccion.
 
-## Variables de entorno
+### Local vs Produccion
 
-Backend `.env`:
+- **Entorno Local (Desarrollo):** En tu computador, las variables del backend se configuran en un archivo llamado `.env` en la raiz del proyecto, y las del frontend en `client/.env`. Estos archivos no se suben al repositorio por seguridad. En el repositorio solo quedan `.env.example` y `client/.env.example` como plantillas.
+- **Entorno de Produccion:** Al desplegar la aplicacion, por ejemplo en Railway, Render, Vercel o Netlify, las variables no se suben mediante archivos `.env`. Se deben ingresar manualmente en la seccion de Environment Variables del hosting.
+
+### Tabla de Variables del Sistema
+
+| Variable | Servicio | Descripcion |
+| :--- | :--- | :--- |
+| `PORT` | API Backend | Puerto donde escucha el servidor Express, por ejemplo 3000. |
+| `NODE_ENV` | API Backend | Define el entorno actual: `development`, `test` o `production`. |
+| `DB_STORAGE` | API Backend | Ruta del archivo SQLite usado por Sequelize. |
+| `JWT_ACCESS_SECRET` | API Backend | Clave secreta para firmar y verificar access tokens. |
+| `JWT_REFRESH_SECRET` | API Backend | Clave secreta para firmar y verificar refresh tokens. |
+| `JWT_ACCESS_EXPIRES_IN` | API Backend | Tiempo de vida del access token, por ejemplo `15m`. |
+| `JWT_REFRESH_EXPIRES_IN` | API Backend | Tiempo de vida del refresh token, por ejemplo `7d`. |
+| `CORS_ORIGIN` | API Backend | URL permitida para consumir la API desde el frontend. En local puede usarse `*`. |
+| `VITE_API_URL` | Frontend | URL base de la API que consume React/Vite. |
+
+### Ejemplo de archivo `.env.example` (Backend)
 
 ```env
 PORT=3000
@@ -24,27 +38,50 @@ JWT_REFRESH_EXPIRES_IN=7d
 CORS_ORIGIN=*
 ```
 
-Frontend `client/.env`:
+### Ejemplo de archivo `client/.env.example` (Frontend)
 
 ```env
 VITE_API_URL=http://localhost:3000/api
 ```
 
+## Estructura General
+
+```txt
+src/        Backend API REST
+client/     Frontend React + Vite
+```
+
+El backend contiene modelos, migraciones, seeders, rutas, controladores, middlewares y servicios para JWT. El frontend contiene las pantallas demo del Hito 2.
+
 ## Instalacion
+
+Instalar dependencias del backend:
 
 ```bash
 npm install
+```
+
+Instalar dependencias del frontend:
+
+```bash
 npm install --prefix client
 ```
 
-## Base de datos
+## Base de Datos
+
+Crear las tablas con Sequelize:
 
 ```bash
 npm run db:migrate
+```
+
+Cargar datos de prueba:
+
+```bash
 npm run db:seed
 ```
 
-Para reiniciar todo:
+Reiniciar la base completa:
 
 ```bash
 npm run db:reset
@@ -59,32 +96,34 @@ password: 123456
 
 ## Ejecucion
 
-Backend:
+Levantar backend:
 
 ```bash
 npm run dev
 ```
 
-Frontend:
+Levantar frontend:
 
 ```bash
 npm run client:dev
 ```
 
-## Hito 2
-
-Evidencia principal:
+Healthcheck:
 
 ```txt
-MATRIZ_REQUISITOS.md
+GET http://localhost:3000/api/health
 ```
 
-Avances:
+## Hito 2
 
-- GEN-04: Registro de usuario.
-- GEN-05: Login con access token y refresh token.
-- GEN-06: Middleware de autenticacion.
-- RQ-03: CRUD de habitaciones.
-- RQ-08: Pantalla visual de habitaciones y ocupacion.
+El avance del Hito 2 incluye:
 
-El cliente usa `sessionStorage` para tokens, no `localStorage`, por lo que la sesion no queda guardada de forma permanente ni se conserva al cerrar una ventana privada/incognito.
+- Registro de usuario.
+- Login con access token y refresh token.
+- Middleware de autenticacion para rutas protegidas.
+- Cliente React + Vite con login, registro y panel de habitaciones.
+- CRUD demo de habitaciones.
+- Dashboard visual de habitaciones y ocupacion.
+- Matriz de requisitos en `MATRIZ_REQUISITOS.md`.
+
+El cliente guarda los tokens en `sessionStorage`, no en `localStorage`, por lo que la sesion no queda guardada de forma permanente ni se conserva al cerrar una ventana privada/incognito.
