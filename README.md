@@ -9,6 +9,7 @@ Para que el proyecto funcione correctamente, es necesario configurar variables d
 ### Local vs Produccion
 
 - **Entorno Local (Desarrollo):** En tu computador, las variables del backend se configuran en un archivo llamado `.env` en la raiz del proyecto, y las del frontend en `client/.env`. Estos archivos no se suben al repositorio por seguridad. En el repositorio solo quedan `.env.example` y `client/.env.example` como plantillas.
+
 - **Entorno de Produccion:** Al desplegar la aplicacion, por ejemplo en Railway, Render, Vercel o Netlify, las variables no se suben mediante archivos `.env`. Se deben ingresar manualmente en la seccion de Environment Variables del hosting.
 
 ### Tabla de Variables del Sistema
@@ -114,16 +115,3 @@ Healthcheck:
 GET http://localhost:3000/api/health
 ```
 
-## Hito 2
-
-El avance del Hito 2 incluye:
-
-- Registro de usuario.
-- Login con access token y refresh token.
-- Middleware de autenticacion para rutas protegidas.
-- Cliente React + Vite con login, registro y panel de habitaciones.
-- CRUD demo de habitaciones.
-- Dashboard visual de habitaciones y ocupacion.
-- Matriz de requisitos en `MATRIZ_REQUISITOS.md`.
-
-El cliente guarda los tokens en `sessionStorage`, no en `localStorage`, por lo que la sesion no queda guardada de forma permanente ni se conserva al cerrar una ventana privada/incognito.

@@ -46,39 +46,85 @@ async function api(path, options = {}) {
   return data;
 }
 
+const initialLoginForm = {
+  email: 'fabian@example.com',
+  password: '123456',
+};
+
+const initialRegisterForm = {
+  nombre: '',
+  email: '',
+  password: '',
+};
+
+const passwordChecks = [
+  ['length', 'Minimo 6 caracteres', (value) => value.length >= 6],
+  ['uppercase', 'Una letra mayuscula', (value) => /[A-Z]/.test(value)],
+  ['number', 'Un numero', (value) => /\d/.test(value)],
+];
+
 function AuthView({ onLogin }) {
   const [mode, setMode] = useState('login');
-  const [form, setForm] = useState({
-    nombre: '',
-    email: 'fabian@example.com',
-    password: '123456',
-  });
+  const [loginForm, setLoginForm] = useState(initialLoginForm);
+  const [registerForm, setRegisterForm] = useState(initialRegisterForm);
   const [status, setStatus] = useState({ loading: false, message: '', type: '' });
 
-  const title = mode === 'login' ? 'Iniciar sesion' : 'Crear cuenta';
+  const isRegister = mode === 'register';
+  const form = isRegister ? registerForm : loginForm;
+  const title = isRegister ? 'Crear cuenta' : 'Iniciar sesion';
+  const passwordIsValid = passwordChecks.every(([, , isValid]) => isValid(registerForm.password));
+
+  const switchMode = (nextMode) => {
+    setStatus({ loading: false, message: '', type: '' });
+    setMode(nextMode);
+
+    if (nextMode === 'register') {
+      setRegisterForm(initialRegisterForm);
+    }
+  };
+
+  const updateForm = (field, value) => {
+    if (isRegister) {
+      setRegisterForm({ ...registerForm, [field]: value });
+      return;
+    }
+
+    setLoginForm({ ...loginForm, [field]: value });
+  };
 
   const submit = async (event) => {
     event.preventDefault();
     setStatus({ loading: true, message: '', type: '' });
     try {
-      if (mode === 'register') {
+      if (isRegister) {
+        if (!passwordIsValid) {
+          setStatus({
+            loading: false,
+            message: 'La contrasena debe tener minimo 6 caracteres, una mayuscula y un numero.',
+            type: 'error',
+          });
+          return;
+        }
+
         await api('/auth/register', {
           method: 'POST',
           body: JSON.stringify({
-            nombre: form.nombre,
-            email: form.email,
-            password: form.password,
+            nombre: registerForm.nombre,
+            email: registerForm.email,
+            password: registerForm.password,
             rol: 'recepcionista',
           }),
         });
         setStatus({ loading: false, message: 'Cuenta creada. Ahora puedes iniciar sesion.', type: 'success' });
+        setLoginForm({ email: registerForm.email, password: '' });
+        setRegisterForm(initialRegisterForm);
         setMode('login');
         return;
       }
 
       const response = await api('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email: form.email, password: form.password }),
+        body: JSON.stringify({ email: loginForm.email, password: loginForm.password }),
       });
 
       session.accessToken = response.data.accessToken;
@@ -92,21 +138,48 @@ function AuthView({ onLogin }) {
   return (
     <main className="auth-shell">
       <section className="auth-panel" aria-labelledby="auth-title">
-        <div className="brand-block">
+        <div className="brand-block auth-brand">
           <span className="brand-mark">RH</span>
           <div>
             <p className="eyebrow">Reserva Hotel</p>
-            <h1 id="auth-title">{title}</h1>
+            <h1 id="auth-title">Acceso al sistema</h1>
           </div>
         </div>
 
+        <p className="auth-copy">
+          Ingresa al panel con tu cuenta demo o registra un usuario nuevo para probar el flujo completo.
+        </p>
+
+        <div className="auth-tabs" role="tablist" aria-label="Tipo de acceso">
+          <button
+            className={`auth-tab ${mode === 'login' ? 'active' : ''}`}
+            type="button"
+            role="tab"
+            aria-selected={mode === 'login'}
+            onClick={() => switchMode('login')}
+          >
+            Iniciar sesion
+          </button>
+          <button
+            className={`auth-tab ${isRegister ? 'active' : ''}`}
+            type="button"
+            role="tab"
+            aria-selected={isRegister}
+            onClick={() => switchMode('register')}
+          >
+            Registrarse
+          </button>
+        </div>
+
         <form className="auth-form" onSubmit={submit}>
-          {mode === 'register' && (
+          <h2>{title}</h2>
+
+          {isRegister && (
             <label>
               Nombre
               <input
-                value={form.nombre}
-                onChange={(event) => setForm({ ...form, nombre: event.target.value })}
+                value={registerForm.nombre}
+                onChange={(event) => updateForm('nombre', event.target.value)}
                 placeholder="Ej: Fabian Mora"
                 autoComplete="name"
                 required
@@ -119,7 +192,7 @@ function AuthView({ onLogin }) {
             <input
               type="email"
               value={form.email}
-              onChange={(event) => setForm({ ...form, email: event.target.value })}
+              onChange={(event) => updateForm('email', event.target.value)}
               placeholder="correo@hotel.cl"
               autoComplete="email"
               required
@@ -131,12 +204,24 @@ function AuthView({ onLogin }) {
             <input
               type="password"
               value={form.password}
-              onChange={(event) => setForm({ ...form, password: event.target.value })}
+              onChange={(event) => updateForm('password', event.target.value)}
               minLength={6}
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              pattern={isRegister ? '(?=.*[A-Z])(?=.*\\d).{6,}' : undefined}
+              autoComplete={isRegister ? 'new-password' : 'current-password'}
+              aria-describedby={isRegister ? 'password-rules' : undefined}
               required
             />
           </label>
+
+          {isRegister && (
+            <ul className="password-rules" id="password-rules" aria-label="Requisitos de contrasena">
+              {passwordChecks.map(([key, label, isValid]) => (
+                <li className={isValid(registerForm.password) ? 'met' : ''} key={key}>
+                  {label}
+                </li>
+              ))}
+            </ul>
+          )}
 
           {status.message && (
             <p className={`feedback ${status.type}`} role="alert">
@@ -145,17 +230,9 @@ function AuthView({ onLogin }) {
           )}
 
           <button className="primary-button" type="submit" disabled={status.loading}>
-            {status.loading ? 'Procesando...' : mode === 'login' ? 'Entrar al panel' : 'Crear cuenta'}
+            {status.loading ? 'Procesando...' : isRegister ? 'Crear cuenta' : 'Entrar al panel'}
           </button>
         </form>
-
-        <button className="text-button" type="button" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
-          {mode === 'login' ? 'Crear una cuenta nueva' : 'Ya tengo cuenta'}
-        </button>
-
-        <p className="session-note">
-          La sesion usa sessionStorage: el token no queda guardado de forma permanente ni se conserva al cerrar la ventana privada.
-        </p>
       </section>
     </main>
   );

@@ -61,7 +61,7 @@ button:disabled {
 }
 
 .auth-panel {
-  width: min(460px, 100%);
+  width: min(520px, 100%);
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid var(--border);
   border-radius: 24px;
@@ -80,7 +80,11 @@ button:disabled {
 
 .brand-block {
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+}
+
+.auth-brand {
+  align-items: flex-start;
 }
 
 .brand-mark {
@@ -120,10 +124,53 @@ h2 {
   font-size: 22px;
 }
 
+.auth-copy {
+  margin-bottom: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 24px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.auth-tab {
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 800;
+  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.auth-tab:hover {
+  color: var(--text);
+}
+
+.auth-tab.active {
+  background: var(--surface);
+  color: var(--primary-dark);
+  box-shadow: 0 8px 20px rgba(23, 32, 42, 0.08);
+}
+
 .auth-form,
 .room-form {
   display: grid;
   gap: 16px;
+}
+
+.auth-form h2 {
+  font-size: 20px;
+  margin-bottom: 2px;
 }
 
 label {
@@ -201,6 +248,41 @@ textarea:focus {
 .session-note {
   margin: 14px 0 0;
   font-size: 13px;
+}
+
+.password-rules {
+  display: grid;
+  gap: 8px;
+  margin: -4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.password-rules li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.password-rules li::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+  box-shadow: 0 0 0 3px rgba(217, 224, 232, 0.45);
+}
+
+.password-rules li.met {
+  color: var(--success);
+}
+
+.password-rules li.met::before {
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.14);
 }
 
 .feedback {

@@ -4,7 +4,7 @@ module.exports = {
   async up(queryInterface) {
     const now = new Date();
 
-    await queryInterface.bulkInsert('habitaciones', [
+    const habitaciones = [
       {
         numero: '101',
         tipo: 'individual',
@@ -38,9 +38,9 @@ module.exports = {
         created_at: now,
         updated_at: now,
       },
-    ]);
+    ];
 
-    await queryInterface.bulkInsert('extras', [
+    const extras = [
       {
         nombre: 'Desayuno buffet',
         precio: 8500,
@@ -62,7 +62,41 @@ module.exports = {
         created_at: now,
         updated_at: now,
       },
-    ]);
+    ];
+
+    const habitacionesPendientes = [];
+    for (const habitacion of habitaciones) {
+      const existingRoomId = await queryInterface.rawSelect(
+        'habitaciones',
+        { where: { numero: habitacion.numero } },
+        ['id']
+      );
+
+      if (!existingRoomId) {
+        habitacionesPendientes.push(habitacion);
+      }
+    }
+
+    if (habitacionesPendientes.length > 0) {
+      await queryInterface.bulkInsert('habitaciones', habitacionesPendientes);
+    }
+
+    const extrasPendientes = [];
+    for (const extra of extras) {
+      const existingExtraId = await queryInterface.rawSelect(
+        'extras',
+        { where: { nombre: extra.nombre } },
+        ['id']
+      );
+
+      if (!existingExtraId) {
+        extrasPendientes.push(extra);
+      }
+    }
+
+    if (extrasPendientes.length > 0) {
+      await queryInterface.bulkInsert('extras', extrasPendientes);
+    }
   },
 
   async down(queryInterface) {
