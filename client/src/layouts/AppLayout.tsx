@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   UserRound,
+  UsersRound,
   SearchCheck,
   Sparkles,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ const adminNavItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/habitaciones', label: 'Habitaciones', icon: BedDouble },
   { to: '/reservas', label: 'Reservas', icon: CalendarCheck },
+  { to: '/clientes', label: 'Clientes', icon: UsersRound },
   { to: '/disponibilidad', label: 'Disponibilidad', icon: SearchCheck },
   { to: '/nueva-reserva', label: 'Nueva reserva', icon: Sparkles },
 ];

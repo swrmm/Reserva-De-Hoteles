@@ -3,7 +3,7 @@ const { AppError } = require('../utils/errors');
 const authService = require('../services/authService');
 const asyncHandler = require('../utils/asyncHandler');
 
-const { Usuario } = db;
+const { Habitacion, Reserva, Usuario } = db;
 
 const register = asyncHandler(async (req, res) => {
   const { email, password, nombre } = req.body;
@@ -78,6 +78,31 @@ const listSesiones = asyncHandler(async (req, res) => {
   res.json({ success: true, data: sesiones });
 });
 
+const listUsuarios = asyncHandler(async (req, res) => {
+  const usuarios = await Usuario.findAll({
+    attributes: ['id', 'nombre', 'email', 'rol', 'activo', 'createdAt', 'updatedAt'],
+    include: [
+      {
+        model: Reserva,
+        as: 'reservas',
+        include: [
+          {
+            model: Habitacion,
+            as: 'habitacion',
+            attributes: ['id', 'numero', 'tipo', 'precio_noche'],
+          },
+        ],
+      },
+    ],
+    order: [
+      ['createdAt', 'DESC'],
+      [{ model: Reserva, as: 'reservas' }, 'fecha_entrada', 'DESC'],
+    ],
+  });
+
+  res.json({ success: true, data: usuarios });
+});
+
 const forgotPassword = asyncHandler(async (req, res) => {
   const resetToken = await authService.requestPasswordReset(req.body.email);
   res.json({
@@ -100,6 +125,7 @@ module.exports = {
   me,
   updateMe,
   listSesiones,
+  listUsuarios,
   forgotPassword,
   resetPassword,
 };

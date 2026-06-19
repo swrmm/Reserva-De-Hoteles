@@ -2,7 +2,7 @@ const express = require("express");
 const authController = require("../controllers/authController");
 const authValidators = require("../validators/authValidators");
 const validate = require("../middlewares/validate");
-const { verifyAccessToken } = require("../middlewares/auth");
+const { verifyAccessToken, requireRole } = require("../middlewares/auth");
 
 const router = express.Router();
 
@@ -15,5 +15,6 @@ router.post("/logout", verifyAccessToken, authValidators.logout, validate, authC
 router.get("/me", verifyAccessToken, authController.me);
 router.put("/me", verifyAccessToken, authValidators.updateProfile, validate, authController.updateMe);
 router.get("/sesiones", verifyAccessToken, authController.listSesiones);
+router.get("/usuarios", verifyAccessToken, requireRole("admin"), authController.listUsuarios);
 
 module.exports = router;

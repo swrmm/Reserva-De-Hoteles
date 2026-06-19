@@ -8,6 +8,9 @@ export interface User {
   email: string;
   rol: 'admin' | 'recepcionista';
   activo?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  reservas?: Reservation[];
 }
 
 export interface Room {

@@ -109,6 +109,7 @@ export const api = {
       skipAuth: true,
     }),
   me: () => request<ApiResponse<LoginResponse['usuario']>>('/auth/me'),
+  getUsers: () => request<ApiResponse<LoginResponse['usuario'][]>>('/auth/usuarios'),
   logout: (refreshToken: string) =>
     request<null>('/auth/logout', {
       method: 'POST',

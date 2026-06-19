@@ -4,6 +4,7 @@ import { AuthLayout } from '../layouts/AuthLayout';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { AvailabilityPage } from '../pages/AvailabilityPage';
 import { BookingWizardPage } from '../pages/BookingWizardPage';
+import { CustomersPage } from '../pages/CustomersPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { LandingPage } from '../pages/LandingPage';
@@ -34,6 +35,7 @@ export function AppRouter() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/habitaciones" element={<RoomsPage />} />
           <Route path="/reservas" element={<ReservationsPage />} />
+          <Route path="/clientes" element={<CustomersPage />} />
           <Route path="/disponibilidad" element={<AvailabilityPage />} />
           <Route path="/nueva-reserva" element={<BookingWizardPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
