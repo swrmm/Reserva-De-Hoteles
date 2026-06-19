@@ -105,10 +105,11 @@ const listUsuarios = asyncHandler(async (req, res) => {
 
 const forgotPassword = asyncHandler(async (req, res) => {
   const resetToken = await authService.requestPasswordReset(req.body.email);
+  const shouldShowResetToken = process.env.SHOW_RESET_TOKEN === 'true' || process.env.NODE_ENV !== 'production';
   res.json({
     success: true,
     message: 'Si el email existe, se generó un código de recuperación',
-    ...(resetToken && process.env.NODE_ENV !== 'production' && { data: { resetToken } }),
+    ...(resetToken && shouldShowResetToken && { data: { resetToken } }),
   });
 });
 
