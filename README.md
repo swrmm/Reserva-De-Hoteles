@@ -60,4 +60,11 @@ password: 123456
 
 El registro publico crea solamente cuentas de usuario. No se pueden crear nuevos administradores desde el formulario ni desde `POST /api/auth/register`.
 
+## Despliegue publico
+
+```txt
+API Railway: https://reserva-de-hoteles-production.up.railway.app/api
+Frontend: https://reservadehoteles.vercel.app/
+Healthcheck API: https://reserva-de-hoteles-production.up.railway.app/api/health
+```
 
