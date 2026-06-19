@@ -20,7 +20,7 @@ function errorHandler(error, req, res, next) {
 
   if (error.name === 'SequelizeValidationError' || error instanceof ValidationError) {
     statusCode = 400;
-    message = 'Error de validacion en base de datos';
+    message = 'Error de validación en base de datos';
     details = error.errors?.map((item) => ({ field: item.path, message: item.message }));
   }
 
@@ -32,7 +32,7 @@ function errorHandler(error, req, res, next) {
 
   if (error.name === 'SequelizeForeignKeyConstraintError' || error instanceof ForeignKeyConstraintError) {
     statusCode = 400;
-    message = 'Referencia invalida';
+    message = 'Referencia inválida';
   }
 
   if (process.env.NODE_ENV !== 'production' && statusCode === 500) {

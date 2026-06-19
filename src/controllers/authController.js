@@ -6,13 +6,13 @@ const asyncHandler = require('../utils/asyncHandler');
 const { Usuario } = db;
 
 const register = asyncHandler(async (req, res) => {
-  const { email, password, nombre, rol } = req.body;
+  const { email, password, nombre } = req.body;
 
   const exists = await Usuario.unscoped().findOne({ where: { email } });
-  if (exists) throw new AppError('El email ya esta registrado', 409);
+  if (exists) throw new AppError('El email ya está registrado', 409);
 
   const passwordHash = await Usuario.hashPassword(password);
-  const usuario = await Usuario.create({ email, passwordHash, nombre, rol });
+  const usuario = await Usuario.create({ email, passwordHash, nombre, rol: 'recepcionista' });
 
   res.status(201).json({
     success: true,
@@ -25,7 +25,7 @@ const login = asyncHandler(async (req, res) => {
 
   const usuario = await Usuario.scope('withPassword').findOne({ where: { email } });
   if (!usuario || !(await usuario.validatePassword(password))) {
-    throw new AppError('Credenciales invalidas', 401);
+    throw new AppError('Credenciales inválidas', 401);
   }
 
   const tokens = await authService.issueTokens(usuario, {
@@ -57,9 +57,39 @@ const me = asyncHandler(async (req, res) => {
   res.json({ success: true, data: req.usuario.toSafeJSON() });
 });
 
+const updateMe = asyncHandler(async (req, res) => {
+  const { nombre, email, password } = req.body;
+
+  if (email && email !== req.usuario.email) {
+    const exists = await Usuario.unscoped().findOne({ where: { email } });
+    if (exists) throw new AppError('El email ya está registrado', 409);
+    req.usuario.email = email;
+  }
+
+  if (nombre) req.usuario.nombre = nombre;
+  if (password) req.usuario.passwordHash = await Usuario.hashPassword(password);
+
+  await req.usuario.save();
+  res.json({ success: true, data: req.usuario.toSafeJSON() });
+});
+
 const listSesiones = asyncHandler(async (req, res) => {
   const sesiones = await authService.listActiveSessions(req.usuario.id);
   res.json({ success: true, data: sesiones });
+});
+
+const forgotPassword = asyncHandler(async (req, res) => {
+  const resetToken = await authService.requestPasswordReset(req.body.email);
+  res.json({
+    success: true,
+    message: 'Si el email existe, se generó un código de recuperación',
+    ...(resetToken && process.env.NODE_ENV !== 'production' && { data: { resetToken } }),
+  });
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  await authService.resetPassword(req.body);
+  res.json({ success: true, message: 'Contraseña actualizada correctamente' });
 });
 
 module.exports = {
@@ -68,5 +98,8 @@ module.exports = {
   refresh,
   logout,
   me,
+  updateMe,
   listSesiones,
+  forgotPassword,
+  resetPassword,
 };

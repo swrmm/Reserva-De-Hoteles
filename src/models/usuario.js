@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'usuarioId',
         as: 'reservas',
       });
+      Usuario.hasMany(models.PasswordResetToken, {
+        foreignKey: 'usuarioId',
+        as: 'passwordResetTokens',
+      });
     }
 
     static async hashPassword(password) {

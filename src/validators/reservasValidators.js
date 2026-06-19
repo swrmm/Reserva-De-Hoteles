@@ -12,11 +12,11 @@ const idParam = [
 const create = [
   body('habitacion_id').isInt({ min: 1 }).withMessage('habitacion_id debe ser positivo'),
   body('nombre_huesped').trim().notEmpty().withMessage('nombre_huesped es obligatorio'),
-  body('email_huesped').isEmail().withMessage('email_huesped invalido').normalizeEmail(),
-  body('fecha_entrada').isISO8601().withMessage('fecha_entrada debe ser fecha valida'),
+  body('email_huesped').isEmail().withMessage('email_huesped inválido').normalizeEmail(),
+  body('fecha_entrada').isISO8601().withMessage('fecha_entrada debe ser fecha válida'),
   body('fecha_salida')
     .isISO8601()
-    .withMessage('fecha_salida debe ser fecha valida')
+    .withMessage('fecha_salida debe ser fecha válida')
     .custom(isSalidaPosterior)
     .withMessage('fecha_salida debe ser posterior a fecha_entrada'),
   body('estado')
@@ -28,10 +28,10 @@ const create = [
 ];
 
 const disponibilidad = [
-  query('desde').isISO8601().withMessage('desde debe ser fecha valida'),
+  query('desde').isISO8601().withMessage('desde debe ser fecha válida'),
   query('hasta')
     .isISO8601()
-    .withMessage('hasta debe ser fecha valida')
+    .withMessage('hasta debe ser fecha válida')
     .custom((value, { req }) => new Date(value) > new Date(req.query.desde))
     .withMessage('hasta debe ser posterior a desde'),
   query('capacidad').optional().isInt({ min: 1 }).withMessage('capacidad debe ser positiva'),

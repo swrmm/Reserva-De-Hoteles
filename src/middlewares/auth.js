@@ -26,4 +26,12 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
   next();
 });
 
-module.exports = { verifyAccessToken };
+const requireRole = (...roles) =>
+  asyncHandler(async (req, res, next) => {
+    if (!req.usuario || !roles.includes(req.usuario.rol)) {
+      throw new AppError('No tienes permisos para realizar esta acción', 403);
+    }
+    next();
+  });
+
+module.exports = { verifyAccessToken, requireRole };

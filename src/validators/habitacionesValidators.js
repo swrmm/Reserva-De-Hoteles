@@ -15,7 +15,7 @@ const listQuery = [
 ];
 
 const create = [
-  body('numero').trim().notEmpty().withMessage('numero es obligatorio'),
+  body('numero').trim().notEmpty().withMessage('número es obligatorio'),
   body('tipo').isIn(['individual', 'doble', 'suite', 'familiar']).withMessage('tipo invalido'),
   body('capacidad').isInt({ min: 1 }).withMessage('capacidad debe ser mayor a 0'),
   body('precio_noche').isFloat({ min: 1 }).withMessage('precio_noche debe ser mayor a 0'),

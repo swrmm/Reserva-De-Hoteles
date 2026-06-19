@@ -12,6 +12,24 @@ const includeHabitacion = {
   attributes: ['id', 'numero', 'tipo', 'precio_noche'],
 };
 
+const buildOwnershipWhere = (usuario) => {
+  if (usuario.rol === 'admin') return {};
+  return { usuarioId: usuario.id };
+};
+
+const findReservaForUser = async (id, usuario, options = {}) => {
+  const reserva = await Reserva.findOne({
+    where: {
+      id,
+      ...buildOwnershipWhere(usuario),
+    },
+    ...options,
+  });
+
+  if (!reserva) throw new AppError('Reserva no encontrada', 404);
+  return reserva;
+};
+
 const hasSolapamiento = async ({ habitacionId, fechaEntrada, fechaSalida, reservaId = null }) => {
   const where = {
     habitacionId,
@@ -29,15 +47,16 @@ const hasSolapamiento = async ({ habitacionId, fechaEntrada, fechaSalida, reserv
 const buildReservaData = async (payload, usuarioId) => {
   const habitacion = await Habitacion.findByPk(payload.habitacion_id);
   if (!habitacion || !habitacion.activo) {
-    throw new AppError('Habitacion no encontrada o inactiva', 404);
+    throw new AppError('Habitación no encontrada o inactiva', 404);
   }
 
   if (['mantenimiento', 'inactiva'].includes(habitacion.estado)) {
-    throw new AppError('La habitacion no esta disponible para reservas', 409);
+    throw new AppError('La habitación no está disponible para reservas', 409);
   }
 
   const noches = diffInNights(payload.fecha_entrada, payload.fecha_salida);
   const extrasTotal = Number(payload.extras_total || 0);
+  const precioNocheAplicado = Number(habitacion.precio_noche);
 
   return {
     habitacionId: payload.habitacion_id,
@@ -47,8 +66,9 @@ const buildReservaData = async (payload, usuarioId) => {
     fecha_entrada: payload.fecha_entrada,
     fecha_salida: payload.fecha_salida,
     estado: payload.estado,
+    precio_noche_aplicado: precioNocheAplicado,
     extras_total: extrasTotal,
-    total: noches * Number(habitacion.precio_noche) + extrasTotal,
+    total: noches * precioNocheAplicado + extrasTotal,
     observaciones: payload.observaciones || null,
     origen: payload.origen || 'postman',
   };
@@ -56,6 +76,7 @@ const buildReservaData = async (payload, usuarioId) => {
 
 const list = asyncHandler(async (req, res) => {
   const reservas = await Reserva.findAll({
+    where: buildOwnershipWhere(req.usuario),
     include: [includeHabitacion],
     order: [['fecha_entrada', 'DESC']],
   });
@@ -64,8 +85,7 @@ const list = asyncHandler(async (req, res) => {
 });
 
 const getById = asyncHandler(async (req, res) => {
-  const reserva = await Reserva.findByPk(req.params.id, { include: [includeHabitacion] });
-  if (!reserva) throw new AppError('Reserva no encontrada', 404);
+  const reserva = await findReservaForUser(req.params.id, req.usuario, { include: [includeHabitacion] });
 
   res.json({ success: true, data: reserva });
 });
@@ -78,7 +98,7 @@ const create = asyncHandler(async (req, res) => {
   });
 
   if (overlap) {
-    throw new AppError('No hay disponibilidad para esa habitacion en las fechas seleccionadas', 409);
+    throw new AppError('No hay disponibilidad para esa habitación en las fechas seleccionadas', 409);
   }
 
   const data = await buildReservaData(req.body, req.usuario.id);
@@ -89,8 +109,7 @@ const create = asyncHandler(async (req, res) => {
 });
 
 const replace = asyncHandler(async (req, res) => {
-  const reserva = await Reserva.findByPk(req.params.id);
-  if (!reserva) throw new AppError('Reserva no encontrada', 404);
+  const reserva = await findReservaForUser(req.params.id, req.usuario);
 
   const overlap = await hasSolapamiento({
     habitacionId: req.body.habitacion_id,
@@ -100,7 +119,7 @@ const replace = asyncHandler(async (req, res) => {
   });
 
   if (overlap) {
-    throw new AppError('No hay disponibilidad para esa habitacion en las fechas seleccionadas', 409);
+    throw new AppError('No hay disponibilidad para esa habitación en las fechas seleccionadas', 409);
   }
 
   const data = await buildReservaData(req.body, req.usuario.id);
@@ -113,16 +132,14 @@ const replace = asyncHandler(async (req, res) => {
 const patch = replace;
 
 const cancel = asyncHandler(async (req, res) => {
-  const reserva = await Reserva.findByPk(req.params.id, { include: [includeHabitacion] });
-  if (!reserva) throw new AppError('Reserva no encontrada', 404);
+  const reserva = await findReservaForUser(req.params.id, req.usuario, { include: [includeHabitacion] });
 
   await reserva.update({ estado: 'cancelada' });
   res.json({ success: true, data: reserva });
 });
 
 const remove = asyncHandler(async (req, res) => {
-  const reserva = await Reserva.findByPk(req.params.id);
-  if (!reserva) throw new AppError('Reserva no encontrada', 404);
+  const reserva = await findReservaForUser(req.params.id, req.usuario);
 
   await reserva.destroy();
   res.status(204).send();

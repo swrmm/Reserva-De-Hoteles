@@ -4,18 +4,17 @@ const register = [
   body('email').isEmail().withMessage('Email invalido').normalizeEmail(),
   body('password')
     .isLength({ min: 6 })
-    .withMessage('La contrasena debe tener al menos 6 caracteres')
+    .withMessage('La contraseña debe tener al menos 6 caracteres')
     .matches(/[A-Z]/)
-    .withMessage('La contrasena debe incluir al menos una letra mayuscula')
+    .withMessage('La contraseña debe incluir al menos una letra mayúscula')
     .matches(/\d/)
-    .withMessage('La contrasena debe incluir al menos un numero'),
+    .withMessage('La contraseña debe incluir al menos un número'),
   body('nombre').trim().notEmpty().withMessage('El nombre es obligatorio'),
-  body('rol').optional().isIn(['admin', 'recepcionista']).withMessage('Rol invalido'),
 ];
 
 const login = [
   body('email').isEmail().withMessage('Email invalido').normalizeEmail(),
-  body('password').notEmpty().withMessage('La contrasena es obligatoria'),
+  body('password').notEmpty().withMessage('La contraseña es obligatoria'),
 ];
 
 const refresh = [
@@ -26,9 +25,40 @@ const logout = [
   body('refreshToken').notEmpty().withMessage('refreshToken es obligatorio'),
 ];
 
+const updateProfile = [
+  body('nombre').optional().trim().notEmpty().withMessage('El nombre no puede estar vacio'),
+  body('email').optional().isEmail().withMessage('Email invalido').normalizeEmail(),
+  body('password')
+    .optional({ checkFalsy: true })
+    .isLength({ min: 6 })
+    .withMessage('La contraseña debe tener al menos 6 caracteres')
+    .matches(/[A-Z]/)
+    .withMessage('La contraseña debe incluir al menos una letra mayúscula')
+    .matches(/\d/)
+    .withMessage('La contraseña debe incluir al menos un número'),
+];
+
+const forgotPassword = [
+  body('email').isEmail().withMessage('Email invalido').normalizeEmail(),
+];
+
+const resetPassword = [
+  body('token').notEmpty().withMessage('El código de recuperación es obligatorio'),
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('La contraseña debe tener al menos 6 caracteres')
+    .matches(/[A-Z]/)
+    .withMessage('La contraseña debe incluir al menos una letra mayúscula')
+    .matches(/\d/)
+    .withMessage('La contraseña debe incluir al menos un número'),
+];
+
 module.exports = {
   register,
   login,
   refresh,
   logout,
+  updateProfile,
+  forgotPassword,
+  resetPassword,
 };

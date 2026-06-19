@@ -4,7 +4,7 @@ const config = require('../config');
 const { AppError } = require('../utils/errors');
 const tokenService = require('./tokenService');
 
-const { Usuario, RefreshToken } = db;
+const { Usuario, RefreshToken, PasswordResetToken } = db;
 
 const issueTokens = async (usuario, meta = {}) => {
   const opaqueRefresh = tokenService.generateOpaqueRefreshToken();
@@ -51,12 +51,12 @@ const findActiveSession = async (refreshToken) => {
 
   const session = await RefreshToken.findByPk(payload.sid);
   if (!session || session.usuarioId !== payload.sub) {
-    throw new AppError('Sesion no encontrada', 401);
+    throw new AppError('Sesión no encontrada', 401);
   }
 
   const hash = tokenService.hashToken(opaquePart);
   if (session.tokenHash !== hash || !session.isActive()) {
-    throw new AppError('Sesion revocada o expirada', 401);
+    throw new AppError('Sesión revocada o expirada', 401);
   }
 
   const usuario = await Usuario.findByPk(payload.sub);
@@ -89,9 +89,52 @@ const listActiveSessions = async (usuarioId) => {
   return sessions.map((session) => session.toSessionJSON());
 };
 
+const requestPasswordReset = async (email) => {
+  const usuario = await Usuario.unscoped().findOne({ where: { email } });
+  if (!usuario) return null;
+
+  await PasswordResetToken.update(
+    { usedAt: new Date() },
+    {
+      where: {
+        usuarioId: usuario.id,
+        usedAt: null,
+      },
+    }
+  );
+
+  const resetToken = tokenService.generatePasswordResetToken();
+  await PasswordResetToken.create({
+    usuarioId: usuario.id,
+    tokenHash: tokenService.hashToken(resetToken),
+    expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+  });
+
+  return resetToken;
+};
+
+const resetPassword = async ({ token, password }) => {
+  const tokenHash = tokenService.hashToken(token);
+  const resetRecord = await PasswordResetToken.findOne({ where: { tokenHash } });
+
+  if (!resetRecord || !resetRecord.isActive()) {
+    throw new AppError('Codigo de recuperacion invalido o expirado', 401);
+  }
+
+  const usuario = await Usuario.scope('withPassword').findByPk(resetRecord.usuarioId);
+  if (!usuario) throw new AppError('Usuario no encontrado', 404);
+
+  const passwordHash = await Usuario.hashPassword(password);
+  await usuario.update({ passwordHash });
+  await resetRecord.update({ usedAt: new Date() });
+  await RefreshToken.update({ revokedAt: new Date() }, { where: { usuarioId: usuario.id, revokedAt: null } });
+};
+
 module.exports = {
   issueTokens,
   refreshTokens,
   revokeSession,
   listActiveSessions,
+  requestPasswordReset,
+  resetPassword,
 };

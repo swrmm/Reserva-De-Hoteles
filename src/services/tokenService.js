@@ -35,6 +35,8 @@ const getRefreshExpiresAt = () => {
 
 const generateOpaqueRefreshToken = () => crypto.randomBytes(48).toString('hex');
 
+const generatePasswordResetToken = () => crypto.randomBytes(32).toString('hex');
+
 module.exports = {
   hashToken,
   signAccessToken,
@@ -43,4 +45,5 @@ module.exports = {
   verifyRefreshToken,
   getRefreshExpiresAt,
   generateOpaqueRefreshToken,
+  generatePasswordResetToken,
 };

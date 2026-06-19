@@ -60,6 +60,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+      precio_noche_aplicado: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0,
+      },
       observaciones: {
         type: DataTypes.TEXT,
         allowNull: true,

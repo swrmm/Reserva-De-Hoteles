@@ -12,7 +12,8 @@
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
     "db:seed": "sequelize-cli db:seed:all",
     "db:seed:undo": "sequelize-cli db:seed:undo:all",
-    "db:reset": "sequelize-cli db:migrate:undo:all && sequelize-cli db:migrate && sequelize-cli db:seed:all"
+    "db:reset": "sequelize-cli db:migrate:undo:all && sequelize-cli db:migrate && sequelize-cli db:seed:all",
+    "railway:start": "npm run db:migrate && npm run db:seed && npm start"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,7 @@
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.11.0",
+    "pg": "^8.21.0",
     "sequelize": "^6.37.8",
     "sqlite3": "^6.0.1"
   },

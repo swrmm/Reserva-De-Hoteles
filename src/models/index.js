@@ -9,11 +9,17 @@ const env = process.env.NODE_ENV || 'development';
 const config = require('../config/database.js')[env];
 const db = {};
 
-const sequelize = new Sequelize({
-  dialect: config.dialect,
-  storage: config.storage,
-  logging: config.logging,
-});
+const sequelize = config.url
+  ? new Sequelize(config.url, {
+      dialect: config.dialect,
+      logging: config.logging,
+      dialectOptions: config.dialectOptions,
+    })
+  : new Sequelize({
+      dialect: config.dialect,
+      storage: config.storage,
+      logging: config.logging,
+    });
 
 fs.readdirSync(__dirname)
   .filter(
